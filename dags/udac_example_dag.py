@@ -52,7 +52,8 @@ load_songplays_table = LoadFactOperator(
     task_id='Load_songplays_fact_table',
     dag=dag,
     redshift_conn_id="redshift",
-    sql_select=SqlQueries.songplay_table_insert
+    sql_select=SqlQueries.songplay_table_insert,
+    append_mode=False
 )
 
 load_user_dimension_table = LoadDimensionOperator(
