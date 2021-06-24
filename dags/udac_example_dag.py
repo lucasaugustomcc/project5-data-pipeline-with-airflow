@@ -19,10 +19,10 @@ default_args = {
     'email_on_failure':False
 }
 
-dag = DAG('udac_project4_dag',
+dag = DAG('udac_example_dag',
           default_args=default_args,
           description='Load and transform data in Redshift with Airflow',
-          schedule_interval='@daily'
+          schedule_interval='@hourly'
         )
 
 start_operator = DummyOperator(task_id='Begin_execution',  dag=dag)
@@ -46,7 +46,6 @@ stage_songs_to_redshift = StageToRedshiftOperator(
     aws_credentials_id="aws_credentials",
     s3_bucket="udacity-dend",
     s3_key="song_data"
-    #s3_key = 'song_data/A/A/A'
 )
 
 load_songplays_table = LoadFactOperator(
@@ -55,7 +54,7 @@ load_songplays_table = LoadFactOperator(
     redshift_conn_id="redshift",
     sql_select=SqlQueries.songplay_table_insert
 )
-# https://knowledge.udacity.com/questions/512330
+
 load_user_dimension_table = LoadDimensionOperator(
     task_id='Load_user_dim_table',
     dag=dag,    
@@ -92,20 +91,11 @@ load_time_dimension_table = LoadDimensionOperator(
     append_mode=False
 )
 
-# define data quality check task
-dq_checks=[
-        {'check_sql': "SELECT COUNT(*) FROM users WHERE userid IS NULL", 'expected_result': 0},
-        {'check_sql': "SELECT COUNT(*) FROM songs WHERE songid IS NULL", 'expected_result': 0},
-        {'check_sql': "SELECT COUNT(*) FROM artists WHERE artistid IS NULL", 'expected_result': 0},
-        {'check_sql': "SELECT COUNT(*) FROM time WHERE start_time IS NULL", 'expected_result': 0},
-        {'check_sql': "SELECT COUNT(*) FROM songplays WHERE playid IS NULL", 'expected_result': 0}
-    ]
 run_quality_checks = DataQualityOperator(
     task_id='Run_data_quality_checks',
     dag=dag,
     redshift_conn_id="redshift",
-    table='songs',    
-    dq_checks=dq_checks
+    tables=['songs','time','songplays','users','artists']    
 )
 
 end_operator = DummyOperator(task_id='Stop_execution',  dag=dag)
