@@ -16,6 +16,7 @@ class LoadFactOperator(BaseOperator):
         self.redshift_conn_id = redshift_conn_id
         self.sql_select = sql_select
         self.table = table
+        self.append_mode=append_mode,
 
     def execute(self, context):
         self.log.info("Connecting to Redshift")
